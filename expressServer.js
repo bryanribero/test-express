@@ -2,6 +2,8 @@ import express from 'express'
 import { config } from 'dotenv'
 import { pool } from './pgConnection.js'
 import { handlePrice } from './middleware/handlePrice.js'
+import { upload } from './middleware/upload.js'
+import path from 'path'
 
 config()
 const PORT = process.env.PORT
@@ -15,10 +17,22 @@ app.use(express.json())
 app.get('/productos', async (req, res) => {
   const product = await pool.query('Select * FROM producto')
 
-  return res.json({
-    text: 'Productos encontrados con exito!',
-    content: product.rows
+  res.json(product.rows)
+})
+
+app.get('/descargar/:nombre', (req, res) => {
+  const nombreArchivo = req.params.nombre
+  const dirArchivo = path.resolve(`files/${nombreArchivo}`)
+
+  res.download(dirArchivo, nombreArchivo, (err) => {
+    if (err) {
+      res.status(404).send('Archivo no encontrado')
+    }
   })
+})
+
+app.post('/subir-archivo', upload.single('archivo'), (req, res) => {
+  res.send('Archivo enviado')
 })
 
 app.post('/productos', handlePrice, async (req, res) => {
