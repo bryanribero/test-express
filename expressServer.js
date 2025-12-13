@@ -50,11 +50,24 @@ app.post('/productos', handlePrice, async (req, res) => {
   }
 })
 
+app.post('/usuarios', (req, res, next) => {
+  const { name, email } = req.body
+
+  if (!name || !email || !email.includes('@')) {
+    const err = new Error('Datos invalidos')
+
+    err.statusCode = 400
+    next(err)
+  }
+
+  res.send('Usuario registrado con éxito!')
+})
+
 app.use((req, res) => {
   res.status(404).send('La ruta no existe')
 })
 
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   const status = err.statusCode || 500
 
   res.status(status).json({ error: err.message })
