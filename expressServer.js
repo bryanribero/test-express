@@ -54,6 +54,12 @@ app.use((req, res) => {
   res.status(404).send('La ruta no existe')
 })
 
+app.use((err, req, res, next) => {
+  const status = err.statusCode || 500
+
+  res.status(status).json({ error: err.message })
+})
+
 app.listen(PORT, () => {
   console.log(`Servidor corriendo http://localhost:${PORT}`)
 })
