@@ -4,6 +4,8 @@ import { pool } from './pgConnection.js'
 import { handlePrice } from './middleware/handlePrice.js'
 import { upload } from './middleware/upload.js'
 import path from 'path'
+import { registerValidator } from './validators/user/body.js'
+import { validate } from './middleware/validate.js'
 
 config()
 const PORT = process.env.PORT
@@ -50,16 +52,7 @@ app.post('/productos', handlePrice, async (req, res) => {
   }
 })
 
-app.post('/usuarios', (req, res, next) => {
-  const { name, email } = req.body
-
-  if (!name || !email || !email.includes('@')) {
-    const err = new Error('Datos invalidos')
-
-    err.statusCode = 400
-    next(err)
-  }
-
+app.post('/usuarios', registerValidator, validate('Los datos no se guardaron', 400), (req, res, _next) => {
   res.send('Usuario registrado con éxito!')
 })
 
@@ -70,7 +63,7 @@ app.use((req, res) => {
 app.use((err, req, res, _next) => {
   const status = err.statusCode || 500
 
-  res.status(status).json({ error: err.message })
+  res.status(status).json({ error: err.message, details: err.details || null })
 })
 
 app.listen(PORT, () => {
