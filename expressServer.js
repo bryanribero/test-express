@@ -52,8 +52,8 @@ app.post('/productos', handlePrice, async (req, res) => {
   }
 })
 
-app.post('/usuarios', registerValidator, validate('Los datos no se guardaron', 400), (req, res, _next) => {
-  res.send('Usuario registrado con éxito!')
+app.post('/usuarios', registerValidator, validate('Errores de /usuarios', 400), (req, res, _next) => {
+  res.send('Usuario registrado con exito!')
 })
 
 app.use((req, res) => {
