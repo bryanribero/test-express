@@ -1,7 +1,7 @@
 import express from 'express'
 import { config } from 'dotenv'
 import { pool } from './pgConnection.js'
-import { handlePrice } from './middleware/handlePrice.js'
+import { handlePrice } from './validators/prductos/body.js'
 import { upload } from './middleware/upload.js'
 import path from 'path'
 import { registerValidator } from './validators/user/body.js'
@@ -37,7 +37,7 @@ app.post('/subir-archivo', upload.single('archivo'), (req, res) => {
   res.send('Archivo enviado')
 })
 
-app.post('/productos', handlePrice, async (req, res) => {
+app.post('/productos', handlePrice, validate('Error al cargar el producto', 400), async (req, res, next) => {
   try {
     const { nombre_producto, precio_producto, stock_producto, id_comerciante } = req.body
 
@@ -48,7 +48,16 @@ app.post('/productos', handlePrice, async (req, res) => {
 
     res.json({ text: 'Producto ingresado con exito!', content: product.rows[0] })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    next({
+      status: 500,
+      message: 'Error al crear el producto',
+      details: {
+        entity: 'producto',
+        operation: 'insert',
+        rout: req.originalUrl
+      },
+      originalError: err
+    })
   }
 })
 
@@ -61,9 +70,14 @@ app.use((req, res) => {
 })
 
 app.use((err, req, res, _next) => {
-  const status = err.statusCode || 500
+  if (err.originalError) {
+    console.error(err.originalError)
+  }
 
-  res.status(status).json({ error: err.message, details: err.details || null })
+  res.status(err.status || 500).json({
+    message: err.message || 'Error interno del servidor',
+    details: err.details ?? null
+  })
 })
 
 app.listen(PORT, () => {

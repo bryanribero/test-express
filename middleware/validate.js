@@ -5,11 +5,11 @@ export const validate = (message = 'Error al cargar usuario', statusCode = 400) 
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
-      const err = new Error(message)
-      err.statusCode = statusCode
-      err.details = errors.array().map((e) => e.msg)
-
-      next(err)
+      return next({
+        status: statusCode,
+        message: message,
+        details: errors.array()
+      })
     }
 
     next()
